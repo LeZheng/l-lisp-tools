@@ -1,16 +1,18 @@
-(proclaim '(inline single? append1 map-int filter most best mostn lst-length last1 to-be-list longer group flatten prune 
+(proclaim '(inline single? append1 map-int filter most best mostn last1 to-be-list longer group flatten prune 
            find2 before after duplicate split-if 
            readlist prompt break-loop 
            mkstr symb reread explode 
-           mapa-b map0-n map1-n map-> mappend mapcars rmapcar))
+           mapa-b map0-n map1-n map-> mappend mapcars rmapcar
+           !! def! memoize compose fif fint fun lrec ttrav trec))
 
 (defpackage :com.skyline.owl.tools 
   (:use :COMMON-LISP)
-  (:export :single? :append1 :map-int :filter :most :best :mostn :lst-length :last1 :to-be-list :longer :group :flatten :prune 
+  (:export :single? :append1 :map-int :filter :most :best :mostn :last1 :to-be-list :longer :group :flatten :prune 
            :find2 :before :after :duplicate :split-if 
            :readlist :prompt :break-loop 
            :mkstr :symb :reread :explode 
-           :mapa-b :map0-n :map1-n :map-> :mappend :mapcars :rmapcar))
+           :mapa-b :map0-n :map1-n :map-> :mappend :mapcars :rmapcar
+           :!! :def! :memoize :compose :fif :fint :fun :lrec :ttrav :trec))
 
 (in-package :com.skyline.owl.tools)
 ;;;-------------list method-------------
@@ -66,11 +68,6 @@
       (values (nreverse result) m-score))))
 
 
-(defun lst-length (lst)
-  (if (consp lst) 
-    (+ 1 (lst-length (cdr lst)))
-    0))
-		
 (defun last1 (lst)
   (car (last lst)))
 
