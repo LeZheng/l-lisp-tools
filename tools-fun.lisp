@@ -7,6 +7,7 @@
 
 (defpackage :com.skyline.owl.tools 
   (:use :COMMON-LISP)
+  (:nicknames "lz-tools")
   (:export :single? :append1 :map-int :filter :most :best :mostn :last1 :to-be-list :longer :group :flatten :prune 
            :find2 :before :after :duplicate :split-if 
            :readlist :prompt :break-loop 
@@ -41,7 +42,7 @@
     (dolist (x lst)
       (let ((s (funcall fn x)))
         (if (null result) 
-          (setf result s)
+          (and (setf result s) (setf robj x))
           (and (> s result) (setf result s) (setf robj x)))))
     (values robj result)))
 
