@@ -7,7 +7,7 @@
 
 (defpackage :com.skyline.owl.tools 
   (:use :COMMON-LISP)
-  (:nicknames "lz-tools")
+  (:nicknames "l-util")
   (:export :single? :append1 :map-int :filter :most :best :mostn :last1 :to-be-list :longer :group :flatten :prune 
            :find2 :before :after :duplicate :split-if 
            :readlist :prompt :break-loop 

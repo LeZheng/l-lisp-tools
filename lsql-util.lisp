@@ -1,5 +1,6 @@
 (defpackage :com.skyline.owl.lsql
   (:use :COMMON-LISP)
+  (:nicknames "l-sql")
   (:export :l-select
            :l-selectr
            :l-delete

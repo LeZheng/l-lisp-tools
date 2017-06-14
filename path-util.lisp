@@ -1,8 +1,11 @@
-(defpackage :com.skyline.owl.path
+(defpackage :com.skyline.owl.fs
   (:use :COMMON-LISP)
+  (:nicknames :l-fs)
   (:export :list-directory
            :file-exists-p
-           :walk-directory))
+           :walk-directory
+           :file-to-list 
+           :list-to-file))
 
 (in-package :com.skyline.owl.path)
 
@@ -106,3 +109,20 @@
               (dolist (x (list-directory name)) (walk x)))
              ((funcall test name) (funcall fn name)))))
     (walk (pathname-as-directory dirname))))
+
+
+(defun file-to-list (filename)
+  (let ((r nil))
+    (with-open-file (str filename :direction :input
+                          :if-does-not-exist nil)
+        (loop for line = (read-line str nil) while line do (push line r)))
+    (reverse r)))
+    
+(defun list-to-file (lst filename)
+  (with-open-file (str filename :direction :output
+                       :if-exists :supersede
+                       :if-does-not-exist :create)
+    (dolist (line lst)
+      (format str "~a" line)
+      (write-line "" str))))
+
