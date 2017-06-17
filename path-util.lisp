@@ -1,5 +1,5 @@
 (defpackage :com.skyline.owl.fs
-  (:use :COMMON-LISP)
+  (:use :COMMON-LISP :COMMON-LISP-USER)
   (:nicknames :l-fs)
   (:export :list-directory
            :file-exists-p
@@ -7,7 +7,7 @@
            :file-to-list 
            :list-to-file))
 
-(in-package :com.skyline.owl.path)
+(in-package :com.skyline.owl.fs)
 
 (defun component-present-p (value)
   (and value (not (eql value :unspecific))))
