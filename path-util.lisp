@@ -1,6 +1,6 @@
 (defpackage :com.skyline.owl.fs
   (:use :COMMON-LISP :COMMON-LISP-USER)
-  (:nicknames :l-fs)
+  (:nicknames :l-fs l-fs "l-fs")
   (:export :list-directory
            :file-exists-p
            :walk-directory
