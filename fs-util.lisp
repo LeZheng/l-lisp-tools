@@ -1,5 +1,5 @@
 (defpackage :com.skyline.owl.fs
-  (:use :COMMON-LISP :COMMON-LISP-USER)
+  (:use :COMMON-LISP)
   (:nicknames :l-fs l-fs "l-fs")
   (:export :list-directory
            :file-exists-p
@@ -52,6 +52,8 @@
     :defaults (pathname-as-directory path)))
         
 (defun list-directory (dirname)
+  "This function is to list dir by dirname,like:
+  (list-directory \"/home\")"
   (when (wild-pathname-p dirname)
     (error "Can only list concrete directory names.*"))
   (let ((wildcard (directory-wildcard dirname)))
@@ -81,6 +83,8 @@
     :defaults wildcard))
 
 (defun file-exists-p (pathname)
+  "This function is to test file exist or not,like:
+  (file-exists-p \"/home/admin/a.txt)"
   #+(or sbcl lispworks openmcl)
   (probe-file pathname)
   
@@ -100,6 +104,8 @@
   (error "list-directory not implemented"))
 
 (defun walk-directory (dirname fn &key directories (test (constantly t)))
+  "This function is to map fn into items in dirname,like:
+  (l-fs:walk-directory \"/home/skyline/temp\" #'(lambda (d) (print d)) :directories t)"
   (labels
     ((walk (name)
            (cond 
@@ -112,6 +118,8 @@
 
 
 (defun file-to-list (filename)
+  "This function to read file to list with line,like:
+  (file-to-list \"/home/admin/a.txt\")"
   (let ((r nil))
     (with-open-file (str filename :direction :input
                           :if-does-not-exist nil)
@@ -119,6 +127,8 @@
     (reverse r)))
     
 (defun list-to-file (lst filename)
+  "This function is to write list to file with line,like:
+    (list-to-file '(a b c) \"/home/admin/a.txt\")"
   (with-open-file (str filename :direction :output
                        :if-exists :supersede
                        :if-does-not-exist :create)

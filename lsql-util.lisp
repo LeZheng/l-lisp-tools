@@ -8,22 +8,11 @@
            :l-insert))
 (in-package :com.skyline.owl.lsql)
 
-(defun file-to-list (filename)
-  (let ((r nil))
-    (with-open-file (str filename :direction :input
-                          :if-does-not-exist nil)
-        (loop for line = (read-line str nil) while line do (push line r)))
-    (reverse r)))
-    
-(defun list-to-file (lst filename)
-  (with-open-file (str filename :direction :output
-                       :if-exists :supersede
-                       :if-does-not-exist :create)
-    (dolist (line lst)
-      (format str "~a" line)
-      (write-line "" str))))
-
 (defun l-select (&key (content #'(lambda (a) a)) (from nil) (where #'(lambda (a) t)))
+  "This function is to select something from list,like:
+  (l-select :CONTENT #'length 
+            :FROM '(\"123456\" \"321\" \"444\") 
+            :WHERE #'(lambda (x) (> (length x) 3)))"
     (let ((r nil))
         (dolist (obj from)
             (if (funcall where obj)
@@ -31,6 +20,9 @@
         (reverse r)))
 
 (defun l-selectr (&key (content #'(lambda (a) a)) (from nil) (where #'(lambda (a) t)))
+  "This function is to select something from tree,like:
+  (l-selectr :FROM '((1 2 3 4) (5 6 7 8) (11 22 33))
+             :WHERE #'(lambda (x) (> x 6)))"
   (let ((r nil))
     (dolist (obj from)
       (if (atom obj)
@@ -40,6 +32,8 @@
     (reverse r)))
 
 (defun l-insert (item &key (to nil) (before #'(lambda (a) nil)) (after #'(lambda (a) nil)) (at nil))
+  "This function is to insert item into list,like:
+  (l-insert 333 :TO '(1 2 3 4 5 6 11 22 33) :AT 3)"
   (let ((r nil))
     (do ((i 0 (1+ i)) (obj to (cdr obj)))
       ((or (null obj)
@@ -51,6 +45,8 @@
     (reverse r)))
 
 (defun l-update (lst &key (where #'(lambda (a) nil)) (todo #'(lambda (a) a)))
+  "This function is to update item in lst  which test :WHERE ok using :TODO,like:
+  (l-update '(1 2 3 4 5 6 7 8) :WHERE #'evenp :TODO #'1+)"
   (let ((r nil))
     (dolist (obj lst)
       (if (funcall where obj)
@@ -59,6 +55,8 @@
     (reverse r)))
 
 (defun l-delete (lst &key (where #'(lambda (a) nil)))
+  "This function is to delete item which test :WHERE ok from lst,like:
+  (l-delete '(1 2 3 4 5 6 7) :WHERE #'evenp)"
   (let ((r nil))
     (dolist (obj lst)
       (if (funcall where obj)
@@ -67,14 +65,10 @@
     (reverse r)))
 
 (defun prop-name (&rest props)
+  "This function is to provide a function get props from a list,like:
+  (prop-name :name :age :id)"
   #'(lambda (lst)
         (let ((r nil))
           (dolist (prop props)
             (push (getf lst prop) r))
           (reverse r))))
-;;;----------------example---------------------
-(l-select :from '(1 2 3 4 5)
-        :where #'(lambda (a) (evenp a)))
-
-(l-selectr :from '(1 2 3 4 (6 4 3) 8 (6 (4 44))) 
-         :where #'(lambda (a) (evenp a)))
