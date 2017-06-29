@@ -8,7 +8,7 @@
 (defpackage :com.skyline.owl.tools 
   (:use :COMMON-LISP)
   (:nicknames "l-util" l-util :l-util)
-  (:export :single? :append1 :map-int :filter :most :best :mostn :last1 :to-be-list :longer :group :flatten :prune 
+  (:export :single? :append1 :map-int :filter :most :best :mostn :last1 :to-be-list :longer :group :classfy :flatten :prune 
            :find2 :before :after :duplicate :split-if 
            :readlist :prompt :break-loop 
            :mkstr :symb :reread :explode 
@@ -113,6 +113,19 @@
     (if (null res)
       (nreverse r)
       (group res n r))))
+
+(defun classfy (items &key (key #'identity) (test #'equal))
+  "This function is to classfy items by test key,like:
+  (classfy '(1 2 3 4 5 6 7 8) :key #'evenp)"
+  (let ((result-table (make-hash-table :test test))
+        (result nil))
+    (dolist (item items)
+      (let ((k (funcall key item)))
+        (if (null (gethash k result-table))
+          (setf (gethash k result-table) (list item))
+          (setf (gethash k result-table) (append (gethash k result-table) (list item))))))
+    (maphash #'(lambda (k v) (push v result)) result-table)
+    result))
             
 (defun flatten (x &optional (acc nil))
   "This function is to extract list in list,like:
