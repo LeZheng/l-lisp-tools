@@ -1,3 +1,4 @@
+(ql:quickload "cl-ppcre")
 (proclaim '(inline single? append1 map-int filter most best mostn last1 to-be-list longer group flatten prune 
            find2 before after duplicate split-if 
            readlist prompt break-loop 
@@ -13,7 +14,8 @@
            :readlist :prompt :break-loop 
            :mkstr :symb :reread :explode 
            :mapa-b :map0-n :map1-n :map-> :mappend :mapcars :rmapcar
-           :!! :def! :memoize :compose :fif :fint :fun :lrec :ttrav :trec))
+           :!! :def! :memoize :compose :fif :fint :fun :lrec :ttrav :trec
+           :extract-words))
 
 (in-package :com.skyline.owl.tools)
 ;;;-------------list method-------------
@@ -383,3 +385,13 @@
                             #'(lambda () (self (car tree)))
                             #'(lambda () (if (cdr tree) (self (cdr tree))))))))
     #'self))
+
+;;;text about
+(defun extract-words (text &optional (size 1))
+  "This function is to extract words which longer than size from text,like:
+  (extract-words \"hello world\")"
+  (delete-duplicates
+    (cl-ppcre:all-matches-as-strings 
+      (format nil "[a-zA-Z]{~d,}" size) 
+      text)
+    :test #'string=))
