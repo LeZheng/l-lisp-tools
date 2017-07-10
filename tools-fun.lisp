@@ -116,6 +116,14 @@
       (nreverse r)
       (group res n r))))
 
+(defun associate (obj1 obj2 &key (test #'eql))
+  "This function is to associate two object and return a function to judge two object whether have been associated,like:
+  (funcall (associate 1 2) 2 4)"
+  #'(lambda (x y) 
+      (or (and (funcall test obj1 x) (funcall test obj2 y))
+          (and (funcall test obj2 x) (funcall test obj1 y)))))
+
+
 (defun classfy (items &key (key #'identity) (test #'equal))
   "This function is to classfy items by test key,like:
   (classfy '(1 2 3 4 5 6 7 8) :key #'evenp)"
