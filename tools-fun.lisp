@@ -122,6 +122,22 @@
   #'(lambda (&optional (f #'list)) 
       (funcall f obj1 obj2)))
 
+(defun fold-right (op init seq)
+  "This function is to fold-right seq by op,like:
+  (fold-right #'+ 0 '(1 2 3 4))"
+  (if (null seq)
+    init
+    (funcall op (car seq)
+          (fold-right op init (cdr seq)))))
+
+(defun fold-left (op init seq) 
+  "This function is to fold-left seq by op,like:
+  (fold-left #'+ 0 '(1 2 3 4))"
+  (labels ((iter (op init rest) 
+                 (if (null rest) 
+                   init
+                   (iter op (funcall op (car rest) init) (cdr rest)))))
+    (iter op init seq)))
 
 (defun classfy (items &key (key #'identity) (test #'equal))
   "This function is to classfy items by test key,like:
