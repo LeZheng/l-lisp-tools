@@ -116,7 +116,7 @@
       (nreverse r)
       (group res n r))))
 
-(defun associate (obj1 obj2 &key (test #'eql))
+(defun associate (obj1 obj2 &key (test #'eql));;TODO does not have good idea
   "This function is to associate two object and return a function,like:
   (funcall (associate 1 2) 2 4)"
   #'(lambda (&optional (f #'list)) 
