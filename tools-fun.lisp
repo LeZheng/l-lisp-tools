@@ -172,6 +172,14 @@
                  acc
                  (cons (car tree) acc))))))
 
+(defun flatten! (l &key (start "{") (end "}") (test #'eql))
+  ""
+  ()
+  (do* ((result nil ) (res l ) (s-index (position start l) (position start res)))
+    ((null s-index) (reverse result))
+    (append (reverse (subseq res 0 s-index)) result)
+    (push (flatten! (subseq res (1+ s-index)) :start start :end end :test test))))
+
 ;;;-------------- search -------------------
 (defun find2 (fn lst)
   "This function is to find the item and values which fit in fn,like:

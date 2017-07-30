@@ -1,5 +1,5 @@
 (defmacro nil! (var)
-  `(setq ,var nil))
+  `(setf ,var nil))
 
 (defmacro while (test &body body)
   `(do ()
