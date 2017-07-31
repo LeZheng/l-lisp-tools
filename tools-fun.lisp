@@ -172,13 +172,18 @@
                  acc
                  (cons (car tree) acc))))))
 
-(defun flatten! (l &key (start "{") (end "}") (test #'eql))
-  ""
-  ()
-  (do* ((result nil ) (res l ) (s-index (position start l) (position start res)))
-    ((null s-index) (reverse result))
-    (append (reverse (subseq res 0 s-index)) result)
-    (push (flatten! (subseq res (1+ s-index)) :start start :end end :test test))))
+(defun flatten! (l &key (start "{") (end "}") (test #'equal))
+  "This function is create tree from list,like this:
+  (flatten! '(1 2 { 3 { 99 } 4 } 5 { 8 9 } 6) :start '{ :end '} :test #'equal)"
+  (do* ((result nil) 
+        (res l) 
+        (s-index (position start l :test test) (position start res :test test))
+        (e-index (position end l :test test) (position end res :test test)))
+    ((or (null s-index) (< e-index s-index)) (if (and (null s-index) (null e-index))
+                                               (append result res)
+                                               (setf result (cons (append result (subseq res 0 e-index)) (subseq res (1+ e-index))))))
+    (setf result (append result (subseq res 0 s-index)))
+    (setf res (flatten! (subseq res (1+ s-index)) :start start :end end :test test))))
 
 ;;;-------------- search -------------------
 (defun find2 (fn lst)
