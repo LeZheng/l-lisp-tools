@@ -1,3 +1,12 @@
+(defpackage :com.skyline.owl.lmacro
+  (:use "COMMON-LISP")
+  (:nicknames "l-macro" :l-macro l-macro)
+  (:export :nil!
+           :while
+           :for))
+
+(in-package :com.skyline.owl.lmacro)
+
 (defmacro nil! (var)
   `(setf ,var nil))
 
