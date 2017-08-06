@@ -51,6 +51,16 @@
       (setf (gethash word *feature-database*)
             (make-instance 'word-feature :word word))))
 
+;;;text about
+(defun extract-words (text &optional (size 1))
+  "This function is to extract words which longer than size from text,like:
+  (extract-words \"hello world\")"
+  (delete-duplicates
+    (cl-ppcre:all-matches-as-strings
+      (format nil "[a-zA-Z]{~d,}" size)
+      text)
+    :test #'string=))
+
 (defun extract-features (text)
   (mapcar #'intern-feature (extract-words text 3)))
 

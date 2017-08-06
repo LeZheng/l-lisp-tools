@@ -421,13 +421,3 @@
                             #'(lambda () (self (car tree)))
                             #'(lambda () (if (cdr tree) (self (cdr tree))))))))
     #'self))
-
-;;;text about
-(defun extract-words (text &optional (size 1))
-  "This function is to extract words which longer than size from text,like:
-  (extract-words \"hello world\")"
-  (delete-duplicates
-    (cl-ppcre:all-matches-as-strings 
-      (format nil "[a-zA-Z]{~d,}" size) 
-      text)
-    :test #'string=))
