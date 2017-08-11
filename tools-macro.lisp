@@ -5,7 +5,8 @@
            :while
            :for
            :bind-when
-           :bind-when*))
+           :bind-when*
+           :if3 :nif :in-if :in :inq))
 
 (in-package :com.skyline.owl.lmacro)
 
@@ -58,3 +59,31 @@
     `(labels ((,bodfn ,(mapcar #'(lambda (cl)
                                    (condlet-clause vars cl bodfn))
                                clauses))))))
+
+(defmacro if3 (test tc nc ?c)
+  `(case (test)
+     ((nil) ,nc)
+     (t ,tc)
+     (? ,?c)))
+
+(defmacro nif (expr plus zero neg)
+  (let ((g (gensym)))
+    `(let ((,g ,expr))
+       (cond ((plusp ,g) ,plus)
+             ((zerop ,g) ,zero)
+             (t ,neg)))))
+
+(defmacro in (obj &rest choises)
+  (let ((insym (gensym)))
+    `(let ((,insym ,obj))
+       (or ,@(mapcar #'(lambda (c) '(eql ,insym ,c)) choises))))
+
+(defmacro inq (obj &rest choises)
+  `(in ,obj ,@(mapcar #'(lambda (a) `',a) choises)))
+
+(defmacro in-if (fn &rest choises)
+  (let ((fnsym (gensym)))
+    `(let ((,fnsym ,fn))
+       (or ,@(mapcar #'(lambda (x) (funcall ,fnsym x)) choises)))))
+
+
