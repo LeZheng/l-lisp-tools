@@ -6,7 +6,7 @@
            :for
            :bind-when
            :bind-when*
-           :if3 :nif :in-if :in :inq))
+           :if3 :nif :in-if :in :inq :>case))
 
 (in-package :com.skyline.owl.lmacro)
 
@@ -86,4 +86,14 @@
     `(let ((,fnsym ,fn))
        (or ,@(mapcar #'(lambda (x) (funcall ,fnsym x)) choises)))))
 
+(defmacro >case (expr &rest clauses)
+  (let ((g (gensym)))
+    `(let ((,g ,expr))
+       (cond ,@(mapcar #'(lambda (x) (>casex g cl)) clauses)))))
+
+(defmacro >casex (g cl)
+  (let ((key (car cl)) (rest (cdr cl)))
+    (cond ((consp key) `((in ,g ,@key) ,@rest))
+          ((inq key t otherwise) `(t ,@rest))
+          (t (error "bad >case clause")))))
 
