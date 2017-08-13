@@ -6,7 +6,8 @@
            :for
            :bind-when
            :bind-when*
-           :if3 :nif :in-if :in :inq :>case))
+           :if3 :nif :in-if :in :inq :>case
+           :till :do-tuples/c :do-tuples/o))
 
 (in-package :com.skyline.owl.lmacro)
 
@@ -97,3 +98,44 @@
           ((inq key t otherwise) `(t ,@rest))
           (t (error "bad >case clause")))))
 
+(defmacro till (test &body body)
+  `(do ()
+     (,test)
+     ,@body))
+
+(defmacro do-tuples/o (params source &body body)
+  (if params
+    (let ((src (gensym)))
+      `(prog ((,src ,source))
+             (mapc #'(lambda ,params ,@body)
+                   ,@(map0-n #'(lambda (n) 
+                                 `(nthcdr ,n ,src))
+                             (- (length source)
+                                (length params))))))))
+
+(defmacro do-tuples/c (params source &body body)
+  (if params
+    (with-gensyms (src rest bodfn)
+        (let ((len (length params)))
+          `(let ((,src ,source))
+             (when (nthcdr ,(1- len) ,src)
+               (labels ((,bodfn ,params ,@body))
+                 (do ((,rest ,src (cdr ,rest)))
+                   ((not (nthcdr ,(1- len) ,rest))
+                    ,@(mapcar #'(lambda (args)
+                                  `(,bodfn ,@args))
+                              (dt-args len rest src))
+                    nil)
+                   (,bodfn ,@(map1-n #'(lambda (n) `(nth ,(1- n)
+                                                         ,rest))
+                                     len))))))))))
+
+(defun dt-args (len rest src)
+  (map0-n #'(lambda (m) 
+              (map1-n #'(lambda (n)
+                          (let ((x (+ m n)))
+                            (if (>= x len)
+                              `(nth ,(-x len) ,src)
+                              `(nth ,(1- x) ,rest))))
+                      len))
+          (- len 2)))
