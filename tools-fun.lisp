@@ -116,11 +116,11 @@
       (nreverse r)
       (group res n r))))
 
-(defun associate (obj1 obj2 &key (test #'eql));;TODO does not have good idea
-  "This function is to associate two object and return a function,like:
-  (funcall (associate 1 2) 2 4)"
+(defun associate (&rest objs);;TODO does not have good idea
+  "This function is to associate objects and return a function,like:
+  (funcall (associate 1 2 3))"
   #'(lambda (&optional (f #'list)) 
-      (funcall f obj1 obj2)))
+      (apply f objs)))
 
 (defun fold-right (op init seq)
   "This function is to fold-right seq by op,like:
