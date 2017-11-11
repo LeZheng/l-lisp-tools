@@ -15,7 +15,7 @@
            :mkstr :symb :reread :explode 
            :mapa-b :map0-n :map1-n :map-> :mappend :mapcars :rmapcar
            :!! :def! :memoize :compose :fif :fint :fun :lrec :ttrav :trec
-           :extract-words))
+           :extract-words :as-keyword))
 
 (in-package :com.skyline.owl.tools)
 ;;;-------------list method-------------
@@ -421,3 +421,7 @@
                             #'(lambda () (self (car tree)))
                             #'(lambda () (if (cdr tree) (self (cdr tree))))))))
     #'self))
+
+(defun as-keyword (sym)
+  "This function make sym to be a keyword"
+  (intern (string sym) :keyword))
