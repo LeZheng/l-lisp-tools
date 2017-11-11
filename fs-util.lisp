@@ -1,5 +1,5 @@
 (defpackage :com.skyline.owl.fs
-  (:use :COMMON-LISP)
+  (:use :COMMON-LISP :EXT)
   (:nicknames :l-fs l-fs "l-fs")
   (:export :list-directory
            :file-exists-p
@@ -136,3 +136,9 @@
       (format str "~a" line)
       (write-line "" str))))
 
+(defun ls (path)
+  "This function is to list directory in string,like:
+  (ls \"/home/admin\")"
+  (mapcar #'(lambda (p)  
+                (namestring p))  
+          (list-directory path)))
