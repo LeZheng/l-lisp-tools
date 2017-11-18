@@ -4,6 +4,7 @@
   (:export :nil!
            :while
            :for
+           :with-gensyms
            :bind-when
            :bind-when*
            :if3 :nif :in-if :in :inq :>case
@@ -16,7 +17,7 @@
 
 (defmacro while (test &body body)
   `(do ()
-     ((not test))
+     ((not ,test))
      ,@body))
 
 (defmacro for (((var start) stop step) &body body)
@@ -36,8 +37,13 @@
        (if ,(caar binds)
          (bind-when* (cdr binds) ,@body)))))
 
+;;;TODO Something different
 (defmacro with-gensyms (syms &body body)
   `(let ,(mapcar #'(lambda (s) `(,s (gensym))) syms)
+     ,@body))
+
+(defmacro with-gensyms ((&rest names) &body body)
+  `(let ,(loop for n in names collect `(,n (gensym)))
      ,@body))
 
 (defun condlet-clause (vars cl bodfn)
@@ -52,20 +58,22 @@
                       (cdr bindform))))
           (cdr cl)))
 
-(defmacro condlet (clauses & body)
+(defmacro condlet (clauses &body body)
   (let ((bodfn (gensym))
         (vars (mapcar #'(lambda (v) (cons v (gensym)))
                       (remove-duplicates
-                        (mapcar #'car (mappend #'car clauses))))))
-    `(labels ((,bodfn ,(mapcar #'(lambda (cl)
+                        (mapcar #'car (mappend #'cdr clauses))))))
+    `(labels ((,bodfn ,(mapcar #'car vars)
+                      ,@body))
+       (cond ,@(mapcar #'(lambda (cl)
                                    (condlet-clause vars cl bodfn))
-                               clauses))))))
+                               clauses)))))
 
-(defmacro if3 (test tc nc ?c)
-  `(case (test)
-     ((nil) ,nc)
-     (t ,tc)
-     (? ,?c)))
+(defmacro if3 (test t-case nil-case ?-case)
+  `(case ,test
+     ((nil) ,nil-case)
+     (? ,?-case)
+     (t ,t-case)))
 
 (defmacro nif (expr plus zero neg)
   (let ((g (gensym)))
@@ -77,7 +85,7 @@
 (defmacro in (obj &rest choises)
   (let ((insym (gensym)))
     `(let ((,insym ,obj))
-       (or ,@(mapcar #'(lambda (c) '(eql ,insym ,c)) choises))))
+       (or ,@(mapcar #'(lambda (c) `(eql ,insym ,c)) choises)))))
 
 (defmacro inq (obj &rest choises)
   `(in ,obj ,@(mapcar #'(lambda (a) `',a) choises)))
@@ -85,12 +93,13 @@
 (defmacro in-if (fn &rest choises)
   (let ((fnsym (gensym)))
     `(let ((,fnsym ,fn))
-       (or ,@(mapcar #'(lambda (x) (funcall ,fnsym x)) choises)))))
+       (or ,@(mapcar #'(lambda (x) `(funcall ,fnsym ,x)) choises)))))
 
-(defmacro >case (expr &rest clauses)
-  (let ((g (gensym)))
-    `(let ((,g ,expr))
-       (cond ,@(mapcar #'(lambda (x) (>casex g cl)) clauses)))))
+;;;TODO Something error
+;(defmacro >case (expr &rest clauses)
+;  (let ((g (gensym)))
+;    `(let ((,g ,expr))
+;       (cond ,@(mapcar #'(lambda (cl) (>casex g cl)) clauses)))))
 
 (defmacro >casex (g cl)
   (let ((key (car cl)) (rest (cdr cl)))
@@ -173,14 +182,14 @@
 
 (defmacro mvpsetq (&rest args)
   (let* ((pairs (group args 2))
-         (syms (mapcar #’(lambda (p)
-                                 (mapcar #’(lambda (x) (gensym))
+         (syms (mapcar #'(lambda (p)
+                                 (mapcar #'(lambda (x) (gensym))
                                          (mklist (car p))))
                        pairs)))
     (labels ((rec (ps ss)
                   (if (null ps)
-                    ‘(setq
-                         ,@(mapcan #’(lambda (p s)
+                    `(setq
+                         ,@(mapcan #'(lambda (p s)
                                              (shuffle (mklist (car p))
                                                       s))
                                    pairs syms))
@@ -188,10 +197,10 @@
                       (let ((var/s (caar ps))
                             (expr (cadar ps)))
                         (if (consp var/s)
-                          ‘(multiple-value-bind ,(car ss)
+                          `(multiple-value-bind ,(car ss)
                                                 ,expr
                                                 ,body)
-                          ‘(let ((,@(car ss) ,expr))
+                          `(let ((,@(car ss) ,expr))
                                 ,body)))))))
       (rec pairs syms))))
 
@@ -202,26 +211,26 @@
 
 (defmacro mvdo (binds (test &rest result) &body body)
   (let ((label (gensym))
-        (temps (mapcar #’(lambda (b)
+        (temps (mapcar #'(lambda (b)
                                  (if (listp (car b))
-                                   (mapcar #’(lambda (x)
+                                   (mapcar #'(lambda (x)
                                                      (gensym))
                                            (car b))
                                    (gensym)))
                        binds)))
-    ‘(let ,(mappend #’mklist temps)
-          (mvpsetq ,@(mapcan #’(lambda (b var)
+    `(let ,(mappend #'mklist temps)
+          (mvpsetq ,@(mapcan #'(lambda (b var)
                                        (list var (cadr b)))
                              binds
                              temps))
-          (prog ,(mapcar #’(lambda (b var) (list b var))
-                         (mappend #’mklist (mapcar #’car binds))
-                         (mappend #’mklist temps))
+          (prog ,(mapcar #'(lambda (b var) (list b var))
+                         (mappend #'mklist (mapcar #'car binds))
+                         (mappend #'mklist temps))
                 ,label
                 (if ,test
                   (return (progn ,@result)))
                 ,@body
-                (mvpsetq ,@(mapcan #’(lambda (b)
+                (mvpsetq ,@(mapcan #'(lambda (b)
                                              (if (third b)
                                                (list (car b)
                                                      (third b))))
