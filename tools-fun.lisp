@@ -1,10 +1,4 @@
 (ql:quickload "cl-ppcre")
-(proclaim '(inline single? append1 map-int filter most best mostn last1 to-be-list longer group flatten prune 
-           find2 before after duplicate split-if 
-           readlist prompt break-loop 
-           mkstr symb reread explode 
-           mapa-b map0-n map1-n map-> mappend mapcars rmapcar
-           !! def! memoize compose fif fint fun lrec ttrav trec))
 
 (defpackage :com.skyline.owl.tools 
   (:use :COMMON-LISP)
@@ -18,6 +12,13 @@
            :extract-words :as-keyword))
 
 (in-package :com.skyline.owl.tools)
+(proclaim '(inline single? append1 map-int filter most best mostn last1 to-be-list longer group flatten prune
+		   nconc1 mklist
+		   find2 before after duplicate split-if 
+		   readlist prompt break-loop 
+		   mkstr symb reread explode 
+		   mapa-b map0-n map1-n map-> mappend mapcars rmapcar
+		   !! def! memoize compose fif fint fun lrec ttrav trec))
 ;;;-------------list method-------------
 (defun single? (lst)
   "This function is to test lst whether contain one item,like:
@@ -44,51 +45,20 @@
   (let ((result nil))
     (dolist (x lst)
       (let ((r (funcall fn x)))
-        (and (not (null r)) (push r result) )))
+        (if r (push r result))))
     (nreverse result)))
-
-(defun most (fn lst)
-  "This function is to get the item and score which score is highest with funcall fn,like:
-  (most #'(lambda (x) (if (> x 0) x (- x))) '(1 -2 3 -4))"
-  (let ((result nil)(robj nil))
-    (dolist (x lst)
-      (let ((s (funcall fn x)))
-        (if (null result) 
-          (and (setf result s) (setf robj x))
-          (and (> s result) (setf result s) (setf robj x)))))
-    (values robj result)))
-
-(defun best (fn lst)
-  "This function is to get the winner which compare with each other by fn,like:
-  (best #'> '(1 -2 3 -4))"
-  (if (null lst)
-    nil
-    (let ((win (car lst)))
-      (dolist (x (cdr lst))
-        (if (funcall fn x win)
-          (setf win x)))
-      win)))
-
-(defun mostn (fn lst)
-  "This function is to get the items and score which score is highest with funcall fn,like:
-  (mostn #'(lambda (x) (if (> x 0) x (- x))) '(1 -2 3 -4 4))"
-  (if (null lst)
-    (values nil nil)
-    (let ((result (list (car lst))) 
-          (m-score (funcall fn (car lst))))
-      (dolist (item (cdr lst))
-        (let ((score (funcall fn item)))
-          (cond 
-            ((> score m-score) (setf m-score score) (setf result (list item)))
-            ((= score m-score) (push item result))))
-        )
-      (values (nreverse result) m-score))))
 
 
 (defun last1 (lst)
   "This funcion is to get the last car from lst,like:
   (last1 '(1 2 3))"
   (car (last lst)))
+
+(defun nconc1 (lst obj)
+  (nconc lst (list obj)))
+
+(defun mklist (obj)
+  (if (listp obj) obj (list obj)))
 
 (defun to-be-list (obj)
   "This function is to make obj to list,like:
@@ -98,23 +68,25 @@
 (defun longer (x y)
   "This function is to judge which list is longer than another,like:
   (longer '(1 2 3) '(1 2 3 4))"
-  (and x
-       (if (null y)
-         t
-         (longer (cdr x) (cdr y)))))
-            
-(defun group (source n &optional (r nil))
+  (labels ((compare (x y)
+		    (and (consp x)
+			 (or (null y)
+			     (compare (cdr x) (cdr y))))))
+	  (if (and (listp x) (listp y))
+	      (compare x y)
+	    (> (length x) (length y)))))
+           
+(defun group (source n)
   "This function is to split list by num,like:
   (group '(1 2 3 4 5 6 7) 3)"
-  (let ((result nil) (res nil))
-    (do ((i 0 (1+ i))
-         (item source (cdr item)))
-      ((or (= i n) (null item)) (setf res item))
-      (push (car item) result))
-    (push (nreverse result) r)
-    (if (null res)
-      (nreverse r)
-      (group res n r))))
+  (if (zerop n) (error ”zero length”))
+  (labels ((rec (source acc)
+		(let ((rest (nthcdr n source)))
+		  (if (consp rest)
+		      (rec rest (cons (subseq source 0 n) acc))
+		    (nreverse (cons source acc))))))
+	  (if source (rec source nil) nil)))
+
 
 (defun associate (&rest objs);;TODO does not have good idea
   "This function is to associate objects and return a function,like:
@@ -152,25 +124,28 @@
     (maphash #'(lambda (k v) (push v result)) result-table)
     result))
             
-(defun flatten (x &optional (acc nil))
+(defun flatten (x)
   "This function is to extract list in list,like:
   (flatten '(1 2 (3 4 5)))"
-  (cond 
-    ((null x) acc)
-    ((atom x) (cons x acc))
-    (t (flatten (car x) (flatten (cdr x) acc)))))
-        
-(defun prune (fn tree &optional (acc nil))
+  (labels ((rec (x acc)
+		(cond ((null x) acc)
+		      ((atom x) (cons x acc))
+		      (t (rec (car x) (rec (cdr x) acc))))))
+	  (rec x nil)))
+
+(defun prune (test tree)
   "This function is filter to tree,like:
   (prune #'evenp '(1 2 (3 4 5)))"
-  (cond 
-    ((null tree) (nreverse acc))
-    ((consp (car tree)) 
-     (prune fn (cdr tree) (cons (prune fn (car tree) nil) acc)))
-    (t  (prune fn (cdr tree) 
-               (if (funcall fn (car tree))
-                 acc
-                 (cons (car tree) acc))))))
+  (labels ((rec (tree acc)
+		(cond ((null tree) (nreverse acc))
+		      ((consp (car tree))
+		       (rec (cdr tree)
+			    (cons (rec (car tree) nil) acc)))
+		      (t (rec (cdr tree)
+			      (if (funcall test (car tree))
+				  acc
+				(cons (car tree) acc)))))))
+	  (rec tree nil)))
 
 (defun flatten! (l &key (start "{") (end "}") (test #'equal))
   "This function is create tree from list,like this:
@@ -224,6 +199,42 @@
       ((or (null src) (funcall fn (car src))) 
        (values (nreverse acc) src))
       (push (car src) acc))))
+
+(defun most (fn lst)
+  "This function is to get the item and score which score is highest with funcall fn,like:
+  (most #'(lambda (x) (if (> x 0) x (- x))) '(1 -2 3 -4))"
+  (let ((result nil)(robj nil))
+    (dolist (x lst)
+      (let ((s (funcall fn x)))
+        (if (null result) 
+            (and (setf result s) (setf robj x))
+          (and (> s result) (setf result s) (setf robj x)))))
+    (values robj result)))
+
+(defun best (fn lst)
+  "This function is to get the winner which compare with each other by fn,like:
+  (best #'> '(1 -2 3 -4))"
+  (if (null lst)
+      nil
+    (let ((win (car lst)))
+      (dolist (x (cdr lst))
+        (if (funcall fn x win)
+            (setf win x)))
+      win)))
+
+(defun mostn (fn lst)
+  "This function is to get the items and score which score is highest with funcall fn,like:
+  (mostn #'(lambda (x) (if (> x 0) x (- x))) '(1 -2 3 -4 4))"
+  (if (null lst)
+      (values nil nil)
+    (let ((result (list (car lst))) 
+          (m-score (funcall fn (car lst))))
+      (dolist (item (cdr lst))
+        (let ((score (funcall fn item)))
+          (cond 
+           ((> score m-score) (setf m-score score) (setf result (list item)))
+           ((= score m-score) (push item result)))))
+      (values (nreverse result) m-score))))
 
 ;;; ------ IO -------
 (defun readlist (&rest args) 
