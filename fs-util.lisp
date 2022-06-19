@@ -116,15 +116,12 @@
              ((funcall test name) (funcall fn name)))))
     (walk (pathname-as-directory dirname))))
 
-
 (defun file-to-list (filename)
   "This function to read file to list with line,like:
   (file-to-list \"/home/admin/a.txt\")"
-  (let ((r nil))
-    (with-open-file (str filename :direction :input
+  (with-open-file (str filename :direction :input
                           :if-does-not-exist nil)
-        (loop for line = (read-line str nil) while line do (push line r)))
-    (reverse r)))
+        (loop for line = (read-line str nil) while line collect line)))
     
 (defun list-to-file (lst filename)
   "This function is to write list to file with line,like:
@@ -135,6 +132,11 @@
     (dolist (line lst)
       (format str "~a" line)
       (write-line "" str))))
+
+(defun file-to-string (filename)
+  (with-open-file (stream filename :direction :input :if-does-not-exist nil)
+    (reduce #'(lambda (s1 s2) (concatenate 'string s1 s2 "\n"))
+	    (loop for line = (read-line stream nil) while line collect line))))
 
 (defun ls (path)
   "This function is to list directory in string,like:
